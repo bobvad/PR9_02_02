@@ -9,8 +9,7 @@ namespace TaskManagerTelegramBot_Дегтянников
 {
     public class Worker : BackgroundService
     {
-        /// <summary> Token телеграм бота</summary>
-        readonly string Token = "полученный телеграм токен";
+        readonly string Token = "8526951692:AAEESqoEWetKwK3U8JrJzNLc7CZVpKZGStQ";
         TelegramBotClient TelegramBotClient;
         List<Users> Users = new List<Users>();
         Timer Timer;
@@ -24,22 +23,17 @@ namespace TaskManagerTelegramBot_Дегтянников
           "Все события удалены."
         };
 
-
-
-        private readonly ILogger<Worker> _logger;
-
-        public Worker(ILogger<Worker> logger)
-        {
-            _logger = logger;
-        }
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                await Task.Delay(1000, stoppingToken);
-            }
+            TelegramBotClient = new TelegramBotClient(Token);
+            TelegramBotClient.StartReceiving(
+                HandleUpdateAsync,
+                HandleErrorAsync,
+                null,
+                new CancellationTokenSource().Token
+            );
+            TimerCallback TimerCallback = new TimerCallback(Tick);
+            Timer = new Timer(TimerCallback, 0, 0, 60 * 1000);
         }
         public bool CheckFormatDateTime(string value, out DateTime time)
         {
@@ -57,13 +51,13 @@ namespace TaskManagerTelegramBot_Дегтянников
                 }
             };
         }
-        public static InlineKeyboardButton DeleteEvent(string Message)
+        public static InlineKeyboardMarkup DeleteEvent(string Message)
         {
             List<InlineKeyboardButton> inlineKeyboards = new List<InlineKeyboardButton>();
             inlineKeyboards.Add(new InlineKeyboardButton("Удалить", Message));
-            return new InlineKeyboardButton(inlineKeyboards);
+            return new InlineKeyboardMarkup(inlineKeyboards);
         }
-        public async void SendMessage(long chatId,int typeMessage)
+        public async void SendMessage(long chatId, int typeMessage)
         {
             if (typeMessage != 3)
             {
@@ -84,15 +78,15 @@ namespace TaskManagerTelegramBot_Дегтянников
         public async void Command(long chatId, string command)
         {
             if (command.ToLower() == "/start") SendMessage(chatId, 0);
-            else if(command.ToLower() == "/create_task") SendMessage(chatId, 1);
+            else if (command.ToLower() == "/create_task") SendMessage(chatId, 1);
             else if (command.ToLower() == "/list_tasks")
             {
                 Users User = Users.Find(x => x.IdUser == chatId);
                 if (User != null) SendMessage(chatId, 4);
-                else if(User.Events.Count == 0) SendMessage(chatId, 4);
+                else if (User.Events.Count == 0) SendMessage(chatId, 4);
                 else
                 {
-                    foreach(Events Event in User.Events)
+                    foreach (Events Event in User.Events)
                     {
                         await TelegramBotClient.SendMessage(
                             chatId,
@@ -181,5 +175,22 @@ namespace TaskManagerTelegramBot_Дегтянников
         {
             Console.WriteLine("Ошибка: " + exception.Message);
         }
+        public async void Tick(object obj)
+        {
+            string TimeNow = DateTime.Now.ToString("HH:mm dd.ММ.уууу");
+            foreach (Users User in Users)
+            {
+                for (int i = 0; i < User.Events.Count; i++)
+                {
+                    if (User.Events[i].Time.ToString("HH:mm dd.ММ.уууу") != TimeNow) continue;
+                    await TelegramBotClient.SendMessage(
+                        User.IdUser,
+                        "Напоминание: " + User.Events[i].Message
+                    );
+                    User.Events.Remove(User.Events[i]);
+                }
+            }
+        }
+
     }
 }
