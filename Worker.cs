@@ -1,5 +1,6 @@
 using TaskManagerTelegramBot_Дегтянников.Classes;
 using Telegram.Bot;
+using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
@@ -154,6 +155,31 @@ namespace TaskManagerTelegramBot_Дегтянников
                     Time,
                     message.Text.Replace(Time.ToString("HH:mm dd.WM.yyyy") + "\n", "")));
             }
+        }
+        private async Task HandleUpdateAsync(
+          ITelegramBotClient client,
+          Update update,
+          CancellationToken cancellationToken)
+        {
+            if (update.Type == UpdateType.Message)
+                GetMessages(update.Message);
+            else if (update.Type == UpdateType.CallbackQuery)
+            {
+                CallbackQuery query = update.CallbackQuery;
+                Users User = Users.Find(x => x.IdUser == query.Message.Chat.Id);
+                Events Event = User.Events.Find(x => x.Message == query.Data);
+                User.Events.Remove(Event);
+                SendMessage(query.Message.Chat.Id, 5);
+            }
+        }
+        private async Task HandleErrorAsync(
+            ITelegramBotClient client,
+            Exception exception,
+            HandleErrorSource source,
+            CancellationToken token
+            )
+        {
+            Console.WriteLine("Ошибка: " + exception.Message);
         }
     }
 }
