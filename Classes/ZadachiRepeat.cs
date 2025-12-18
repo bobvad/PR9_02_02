@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 
 namespace TaskManagerTelegramBot_Дегтянников.Classes
 {
-    public class Events
+    public class ZadachiRepeat
     {
-        public int Id { get; set; }
-        public DateTime Time { get; set; }
+        public List<DayOfWeek> Days { get; set; } = new();
+        public TimeSpan Time { get; set; }
         public string Message { get; set; }
-        public Events(DateTime time, string message)
+
+        public ZadachiRepeat(List<DayOfWeek> days, TimeSpan time, string message)
         {
+            Days = days;
             Time = time;
             Message = message;
         }

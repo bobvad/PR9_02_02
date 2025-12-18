@@ -10,8 +10,7 @@ namespace TaskManagerTelegramBot_Дегтянников.Classes
 {
     public class ApplicationDbContext : DbContext
     {
-        public DbSet<User> Users { get; set; }
-        public DbSet<Events> Events { get; set; }
+        public DbSet<Commands> Commands { get; set; }
         public ApplicationDbContext()
         {
             Database.EnsureCreated();

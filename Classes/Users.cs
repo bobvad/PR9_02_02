@@ -10,10 +10,12 @@ namespace TaskManagerTelegramBot_Дегтянников.Classes
     {
         public long IdUser { get; set; }
         public List<Events> Events { get; set; }
+        public List<ZadachiRepeat> RepeatEvents { get; set; }
         public Users(long idUser) 
         {
             this.IdUser = idUser;
             Events = new List<Events>();
+            RepeatEvents = new List<ZadachiRepeat>();
         }
     }
 }

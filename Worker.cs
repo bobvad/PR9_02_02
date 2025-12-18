@@ -51,6 +51,28 @@ namespace TaskManagerTelegramBot_Дегтянников
                 }
             };
         }
+        public static void UsersSaved( 
+        string message,  string Commandos)
+        {
+            using (ApplicationDbContext dbContext = new ApplicationDbContext())
+            {
+                try
+                {
+                    var command = new Commands
+                    {
+                        User ="@" + message,
+                        Commandos = Commandos,
+                        Timestamp = DateTime.Now
+                    };
+                    dbContext.Commands.Add(command);
+                    dbContext.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+        }
         public static InlineKeyboardMarkup DeleteEvent(string Message)
         {
             List<InlineKeyboardButton> inlineKeyboards = new List<InlineKeyboardButton>();
@@ -72,7 +94,7 @@ namespace TaskManagerTelegramBot_Дегтянников
                 await TelegramBotClient.SendMessage(
                     chatId,
                     $"Указанное вами время и дата не могут быть установлены" +
-                    $"потому-что сейчас уже: {DateTime.Now.ToString("HH.mm dd.MM.yyyy")}"
+                    $"потому-что сейчас уже : {DateTime.Now.ToString("HH.mm dd.MM.yyyy")}"
                     );
         }
         public async void Command(long chatId, string command)
@@ -103,7 +125,7 @@ namespace TaskManagerTelegramBot_Дегтянников
             Console.WriteLine("Получено сообщение: " + message.Text + " от пользователя: " + message.Chat.Username);
             long IdUser = message.Chat.Id;
             string MessageUser = message.Text;
-
+            UsersSaved(MessageUser, message.Chat.Username);
             if (message.Text.Contains("/"))
                 Command(message.Chat.Id, message.Text);
             else if (message.Text.Equals("Удалить все задачи"))
@@ -147,7 +169,7 @@ namespace TaskManagerTelegramBot_Дегтянников
 
                 User.Events.Add(new Events(
                     Time,
-                    message.Text.Replace(Time.ToString("HH:mm dd.WM.yyyy") + "\n", "")));
+                    message.Text.Replace(Time.ToString("HH:mm dd.MM.yyyy") + "\n", "")));
             }
         }
         private async Task HandleUpdateAsync(
@@ -191,6 +213,5 @@ namespace TaskManagerTelegramBot_Дегтянников
                 }
             }
         }
-
     }
 }
